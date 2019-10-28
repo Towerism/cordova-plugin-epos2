@@ -4,8 +4,7 @@
   "cordova": {
     "id": "cordova-plugin-epos2",
     "platforms": [
-      "android",
-      "ios"
+      "android"
     ]
   },
   "repository": {
@@ -13,7 +12,6 @@
     "url": "https://github.com/aelx311/cordova-plugin-epos2"
   },
   "keywords": [
-    "ios",
     "cordova",
     "apache",
     "ecosystem:cordova",

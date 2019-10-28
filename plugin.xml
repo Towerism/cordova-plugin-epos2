@@ -37,34 +37,4 @@
       <source-file src="src/android/x86_64/libepos2.so" target-dir="libs/x86_64/" />
       <lib-file src="src/android/ePOS2.jar" target-dir="libs/" />
     </platform>
-
-    <!-- ios -->
-    <platform name="ios">
-        <js-module src="www/plugin.js" name="plugin">
-            <runs/>
-            <clobbers target="cordova.epos2" />
-        </js-module>
-
-        <config-file target="config.xml" parent="/*">
-            <feature name="epos2">
-                <param name="ios-package" value="epos2Plugin" onload="true" />
-            </feature>
-        </config-file>
-
-        <config-file target="*-Info.plist" parent="UISupportedExternalAccessoryProtocols">
-          <array>
-            <string>com.epson.escpos</string>
-          </array>
-        </config-file>
-
-        <header-file src="src/ios/ePOS2.h" />
-
-        <header-file src="src/ios/epos2Plugin.h" />
-        <source-file src="src/ios/epos2Plugin.m" />
-
-        <source-file src="src/ios/libepos2.a" framework="true" />
-
-        <framework src="libxml2.2.dylib" framework="true" />
-        <framework src="ExternalAccessory.framework" framework="true" />
-    </platform>
 </plugin>
