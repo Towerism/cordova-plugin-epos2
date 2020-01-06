@@ -1,25 +1,29 @@
+var exec = require("cordova/exec");
 
-var exec = require('cordova/exec');
-
-var PLUGIN_NAME = 'epos2';
+var PLUGIN_NAME = "epos2";
 
 /**
  * Wrapper for cordova exec() returning a promise
  * and considering the optional callback arguments
- * 
+ *
  * @param {String} cmd Plugin command to execute
  * @param {Array} args Command arguments to send
  * @param {Array} callbackArgs List of arguments with callback functions (the last element is considered the errorCallback, the second-to-last the successCallback)
  * @return {Promise}
  */
-function _exec(cmd, args, callbackArgs)
-{
+function _exec(cmd, args, callbackArgs) {
   var _successCallback, _errorCallback;
-  if (callbackArgs.length > 1 && typeof callbackArgs[callbackArgs.length-1] === 'function') {
-    _errorCallback = callbackArgs[callbackArgs.length-1];
+  if (
+    callbackArgs.length > 1 &&
+    typeof callbackArgs[callbackArgs.length - 1] === "function"
+  ) {
+    _errorCallback = callbackArgs[callbackArgs.length - 1];
   }
-  if (callbackArgs.length > 0 && typeof callbackArgs[callbackArgs.length-2] === 'function') {
-    _successCallback = callbackArgs[callbackArgs.length-2];
+  if (
+    callbackArgs.length > 0 &&
+    typeof callbackArgs[callbackArgs.length - 2] === "function"
+  ) {
+    _successCallback = callbackArgs[callbackArgs.length - 2];
   }
 
   return new Promise(function(resolve, reject) {
@@ -44,9 +48,38 @@ function _exec(cmd, args, callbackArgs)
   });
 }
 
+function execDiscoverCommand(isUsbDiscovery, successCallback, errorCallback) {
+  return new Promise(function(resolve, reject) {
+    // start timer to reject promise eventually
+    var timeout = setTimeout(function() {
+      reject(new Error("Error 0x00001: No devices found"));
+    }, 20000);
+
+    exec(
+      function(result) {
+        clearTimeout(timeout);
+        if (typeof successCallback === "function") {
+          successCallback(result);
+        }
+        resolve(result);
+      },
+      function(err) {
+        clearTimeout(timeout);
+        if (typeof errorCallback === "function") {
+          errorCallback(err);
+        }
+        reject(new Error(err));
+      },
+      PLUGIN_NAME,
+      isUsbDiscovery ? "startDiscoverUsb" : "startDiscover",
+      []
+    );
+  });
+}
+
 /**
  * Epson EPOS2 Cordova plugin interface
- * 
+ *
  * This is the plugin interface exposed to cordova.epos2
  */
 var epos2 = {
@@ -62,31 +95,22 @@ var epos2 = {
    * @return {Promise} resolves when the first device is detected or rejects if operation times out
    */
   startDiscover: function(successCallback, errorCallback) {
-    return new Promise(function(resolve, reject) {
-      // start timer to reject promise eventually
-      var timeout = setTimeout(function() {
-        reject(new Error('Error 0x00001: No devices found'));
-      }, 20000);
+    execDiscoverCommand(false, successCallback, errorCallback);
+  },
 
-      exec(function(result) {
-        clearTimeout(timeout);
-        if (typeof successCallback === 'function') {
-          successCallback(result);
-        }
-        resolve(result);
-        },
-        function(err) {
-          clearTimeout(timeout);
-          if (typeof errorCallback === 'function') {
-            errorCallback(err);
-          }
-          reject(new Error(err));
-        },
-        PLUGIN_NAME,
-        'startDiscover',
-        []
-      );
-    });
+  /**
+   * Start usb device discovery
+   *
+   * This will trigger the successCallback function for every
+   * device detected to be available for printing. The device info
+   * is provided as single argument to the callback function.
+   *
+   * @param {Function} successCallback
+   * @param {Function} [errorCallback]
+   * @return {Promise} resolves when the first device is detected or rejects if operation times out
+   */
+  startDiscoverUsb: function(successCallback, errorCallback) {
+    execDiscoverCommand(true, successCallback, errorCallback);
   },
 
   /**
@@ -97,7 +121,7 @@ var epos2 = {
    * @return {Promise}
    */
   stopDiscover: function(successCallback, errorCallback) {
-    return _exec('stopDiscover', [], arguments);
+    return _exec("stopDiscover", [], arguments);
   },
 
   /**
@@ -116,15 +140,15 @@ var epos2 = {
    */
   connectPrinter: function(device, printerModel) {
     var args = [];
-    if (typeof device === 'object' && device.target) {
+    if (typeof device === "object" && device.target) {
       args.push(device.target);
     } else {
       args.push(device);
     }
-    if (printerModel && typeof printerModel === 'string') {
+    if (printerModel && typeof printerModel === "string") {
       args.push(printerModel);
     }
-    return _exec('connectPrinter', args, arguments);
+    return _exec("connectPrinter", args, arguments);
   },
 
   /**
@@ -135,7 +159,7 @@ var epos2 = {
    * @return {Promise}
    */
   disconnectPrinter: function(successCallback, errorCallback) {
-    return _exec('disconnectPrinter', [], arguments);
+    return _exec("disconnectPrinter", [], arguments);
   },
 
   /**
@@ -148,20 +172,20 @@ var epos2 = {
    * @param {Function} [successCallback]
    * @param {Function} [errorCallback]
    * @return {Promise} resolving on success, rejecting on error
-   * @deprecated Use dedicated methods like `printText()` or `printImage()` 
+   * @deprecated Use dedicated methods like `printText()` or `printImage()`
    */
   print: function(data, successCallback, errorCallback) {
-    return _exec('printText', [data, 0, 1, 0], [])
+    return _exec("printText", [data, 0, 1, 0], [])
       .then(function() {
-        return _exec('sendData', [], []);
+        return _exec("sendData", [], []);
       })
       .then(function(result) {
-        if (typeof successCallback === 'function') {
+        if (typeof successCallback === "function") {
           successCallback(result);
         }
       })
       .catch(function(err) {
-        if (typeof errorCallback === 'function') {
+        if (typeof errorCallback === "function") {
           errorCallback(err);
         }
         throw err;
@@ -183,23 +207,35 @@ var epos2 = {
    * @param {Function} [errorCallback]
    * @return {Promise} resolving on success, rejecting on error
    */
-  printText: function(data, textFont, textSize, textAlign, terminate, successCallback, errorCallback) {
+  printText: function(
+    data,
+    textFont,
+    textSize,
+    textAlign,
+    terminate,
+    successCallback,
+    errorCallback
+  ) {
     // convert data argument to array
     if (!Array.isArray(data)) {
       data = [String(data)];
     }
 
-    return _exec('printText', [data, textFont || 0, textSize || 1, textAlign || 0], arguments)
+    return _exec(
+      "printText",
+      [data, textFont || 0, textSize || 1, textAlign || 0],
+      arguments
+    )
       .then(function(result) {
-        return terminate ? _exec('sendData', [], []) : result;
+        return terminate ? _exec("sendData", [], []) : result;
       })
       .then(function(result) {
-        if (typeof successCallback === 'function') {
+        if (typeof successCallback === "function") {
           successCallback(result);
         }
       })
       .catch(function(err) {
-        if (typeof errorCallback === 'function') {
+        if (typeof errorCallback === "function") {
           errorCallback(err);
         }
         throw err;
@@ -219,18 +255,25 @@ var epos2 = {
    * @param {Function} [errorCallback]
    * @return {Promise} resolving on success, rejecting on error
    */
-  printImage: function(data, printMode, halfTone, terminate, successCallback, errorCallback) {
-    return _exec('printImage', [data, printMode || 0, halfTone || 0], arguments)
+  printImage: function(
+    data,
+    printMode,
+    halfTone,
+    terminate,
+    successCallback,
+    errorCallback
+  ) {
+    return _exec("printImage", [data, printMode || 0, halfTone || 0], arguments)
       .then(function(result) {
-        return terminate ? _exec('sendData', [], []) : result;
+        return terminate ? _exec("sendData", [], []) : result;
       })
       .then(function(result) {
-        if (typeof successCallback === 'function') {
+        if (typeof successCallback === "function") {
           successCallback(result);
         }
       })
       .catch(function(err) {
-        if (typeof errorCallback === 'function') {
+        if (typeof errorCallback === "function") {
           errorCallback(err);
         }
         throw err;
@@ -247,7 +290,7 @@ var epos2 = {
    * @return {Promise} resolving with the printer status information
    */
   getPrinterStatus: function(successCallback, errorCallback) {
-    return _exec('getPrinterStatus', [], arguments);
+    return _exec("getPrinterStatus", [], arguments);
   },
 
   /**
@@ -260,7 +303,7 @@ var epos2 = {
    * @return {Promise} resolving with the list of model names
    */
   getSupportedModels: function(successCallback, errorCallback) {
-    return _exec('getSupportedModels', [], arguments);
+    return _exec("getSupportedModels", [], arguments);
   }
 };
 

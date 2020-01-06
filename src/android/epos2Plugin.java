@@ -70,6 +70,8 @@ public class epos2Plugin extends CordovaPlugin {
             public void run() {
                 if (action.equals("startDiscover")) {
                     startDiscovery(callbackContext);
+                } else if (action.equals("startDiscoverUsb")) {
+                    startDiscoveryUsb(callbackContext);
                 } else if (action.equals("stopDiscover")) {
                     stopDiscovery(callbackContext);
                 } else if (action.equals("connectPrinter")) {
@@ -109,6 +111,31 @@ public class epos2Plugin extends CordovaPlugin {
         FilterOption mFilterOption = new FilterOption();
         mFilterOption.setDeviceType(Discovery.TYPE_PRINTER);
         mFilterOption.setEpsonFilter(Discovery.FILTER_NAME);
+        try {
+            Discovery.start(webView.getContext(), mFilterOption, discoveryListener);
+        } catch (Epos2Exception e) {
+            Log.e(TAG, "Error 0x00001: Printer discovery failed: " + e.getErrorStatus(), e);
+            callbackContext.error("Error discovering printer: " + e.getErrorStatus());
+        }
+    }
+
+    private void startDiscoveryUsb(final CallbackContext callbackContext) {
+        // discovery is still running, try to stop it first
+        if (discoverCallbackContext != null) {
+            try {
+                Discovery.stop();
+            } catch (Epos2Exception e) {
+                Log.e(TAG, "Failed to stop running discovery", e);
+            }
+        }
+
+        Log.d(TAG, "Start discovery");
+        discoverCallbackContext = callbackContext;
+
+        FilterOption mFilterOption = new FilterOption();
+        mFilterOption.setDeviceType(Discovery.TYPE_PRINTER);
+        mFilterOption.setEpsonFilter(Discovery.FILTER_NAME);
+        mFilterOption.setPortType(Discovery.PORTTYPE_USB);
         try {
             Discovery.start(webView.getContext(), mFilterOption, discoveryListener);
         } catch (Epos2Exception e) {
