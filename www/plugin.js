@@ -77,12 +77,18 @@ function execDiscoverCommand(isUsbDiscovery, successCallback, errorCallback) {
   });
 }
 
+var useUsbDiscovery = true;
+
 /**
  * Epson EPOS2 Cordova plugin interface
  *
  * This is the plugin interface exposed to cordova.epos2
  */
 var epos2 = {
+  setUsbDiscovery(value) {
+    useUsbDiscovery = value;
+  },
+
   /**
    * Start device discovery
    *
@@ -95,22 +101,7 @@ var epos2 = {
    * @return {Promise} resolves when the first device is detected or rejects if operation times out
    */
   startDiscover: function(successCallback, errorCallback) {
-    execDiscoverCommand(false, successCallback, errorCallback);
-  },
-
-  /**
-   * Start usb device discovery
-   *
-   * This will trigger the successCallback function for every
-   * device detected to be available for printing. The device info
-   * is provided as single argument to the callback function.
-   *
-   * @param {Function} successCallback
-   * @param {Function} [errorCallback]
-   * @return {Promise} resolves when the first device is detected or rejects if operation times out
-   */
-  startDiscoverUsb: function(successCallback, errorCallback) {
-    execDiscoverCommand(true, successCallback, errorCallback);
+    execDiscoverCommand(useUsbDiscovery, successCallback, errorCallback);
   },
 
   /**
