@@ -48,7 +48,7 @@ function _exec(cmd, args, callbackArgs) {
   });
 }
 
-function execDiscoverCommand(isUsbDiscovery, successCallback, errorCallback) {
+function execDiscoverCommand(successCallback, errorCallback) {
   exec(
     function(result) {
       if (typeof successCallback === "function") {
@@ -61,12 +61,10 @@ function execDiscoverCommand(isUsbDiscovery, successCallback, errorCallback) {
       }
     },
     PLUGIN_NAME,
-    isUsbDiscovery ? "startDiscoverUsb" : "startDiscover",
+    "startDiscover",
     []
   );
 }
-
-var useUsbDiscovery = true;
 
 /**
  * Epson EPOS2 Cordova plugin interface
@@ -74,10 +72,6 @@ var useUsbDiscovery = true;
  * This is the plugin interface exposed to cordova.epos2
  */
 var epos2 = {
-  setUsbDiscovery(value) {
-    useUsbDiscovery = value;
-  },
-
   /**
    * Start device discovery
    *
@@ -90,7 +84,7 @@ var epos2 = {
    * @return {Promise} resolves when the first device is detected or rejects if operation times out
    */
   startDiscover: function(successCallback, errorCallback) {
-    execDiscoverCommand(useUsbDiscovery, successCallback, errorCallback);
+    execDiscoverCommand(successCallback, errorCallback);
   },
 
   /**
