@@ -481,7 +481,7 @@ public class epos2Plugin extends CordovaPlugin {
 
             PluginResult pluginResult = new PluginResult(Status.OK, item);
             pluginResult.setKeepCallback(true); // keep the callback open to send the info of more than one device to the application
-            discoverCallbackContext.success(pluginResult);
+            discoverCallbackContext.sendPluginResult(pluginResult);
         }
     };
 
