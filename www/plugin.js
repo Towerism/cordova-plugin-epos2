@@ -49,32 +49,21 @@ function _exec(cmd, args, callbackArgs) {
 }
 
 function execDiscoverCommand(isUsbDiscovery, successCallback, errorCallback) {
-  return new Promise(function(resolve, reject) {
-    // start timer to reject promise eventually
-    var timeout = setTimeout(function() {
-      reject(new Error("Error 0x00001: No devices found"));
-    }, 20000);
-
-    exec(
-      function(result) {
-        clearTimeout(timeout);
-        if (typeof successCallback === "function") {
-          successCallback(result);
-        }
-        resolve(result);
-      },
-      function(err) {
-        clearTimeout(timeout);
-        if (typeof errorCallback === "function") {
-          errorCallback(err);
-        }
-        reject(new Error(err));
-      },
-      PLUGIN_NAME,
-      isUsbDiscovery ? "startDiscoverUsb" : "startDiscover",
-      []
-    );
-  });
+  exec(
+    function(result) {
+      if (typeof successCallback === "function") {
+        successCallback(result);
+      }
+    },
+    function(err) {
+      if (typeof errorCallback === "function") {
+        errorCallback(err);
+      }
+    },
+    PLUGIN_NAME,
+    isUsbDiscovery ? "startDiscoverUsb" : "startDiscover",
+    []
+  );
 }
 
 var useUsbDiscovery = true;
